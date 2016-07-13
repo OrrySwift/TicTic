@@ -22,12 +22,13 @@ namespace TicTic
             t.Start();
             CurrentTick = 0;
             r = new Random();
-            playerLocation = new Point(300, 500);
+            playerLocation = new PointF(300, 500);
             playerAnimation = 0;
             wDown = false;
             aDown = false;
             sDown = false;
             dDown = false;
+            allBullets = new Bullet[0];
         }
         
         Timer t;
@@ -35,50 +36,173 @@ namespace TicTic
         Pen p = new Pen(Color.White, 1f);
         int CurrentTick;
         Random r;
-        Point playerLocation;
+        PointF playerLocation;
+        const Float playerSpeed = 4;
+        const Float playerDSpeed = 2.828;
         Size playerSize = new Size(20,20);
         int playerAnimation;
         bool wDown;
         bool aDown;
         bool sDown;
         bool dDown;
+        bool spaceDown;
+        Bullet[] allBullets;
+        
         Image player = Image.FromFile(@"H:\Projects\Forms\bul\Player.PNG");
+        public class Bullet
+        {
+            public PointF Location;
+            public PointF Velocity;
+            public Size bSize
+            public bool HurtPlayer;
+            public int bImage;
+            public bool destroy;
+            public Bullet(PointF XLocation = new PointF(0f,0f), PointF XVelocity = new PointF(0f,0f), Size xSize = new Size(0,0), bool XHurtPlayer = true, int xImage = 0)
+            {
+                Location = XLocation;
+                Velocity = XVelocity;
+                bSize = xSize;
+                HurtPlayer = XHurtPlayer;
+                bImage = xImage;
+                destroy = false;
+            }
+        }
                 
         private void timer_tick(object sender, EventArgs e)
         {
             CurrentTick++;
-            if (wDown && playerLocation.Y > 0)
+            PointF playerLocChange = new PointF(0f,0f);
+            if (wDown)
             {
-                playerLocation.Y -= 3;
+                playerLocChange.Y -= playerSpeed;
             }
-            if (aDown && playerLocation.X > 0)
+            if (aDown)
             {
-                playerLocation.X -= 3;
+                playerLocChange.X -= playerSpeed;
             }
-            if (sDown && playerLocation.Y < Height - playerSize.Height)
+            if (sDown)
             {
-                playerLocation.Y += 3;
+                playerLocChange.Y += playerSpeed;
             }
-            if (dDown && playerLocation.X < Width - playerSize.Width)
+            if (dDown)
             {
-                playerLocation.X += 3;
+                playerLocChange.X += playerSpeed;
             }
-            if (CurrentTick >= 4)
+            if (playerLocChange.X != 0 && playerLocChange.Y != 0)
             {
-                if (wDown || aDown || sDown || dDown)
+                switch (playerLocChange.X/playerSpeed)
+                {
+                    case -1:
+                        playerLocChange.X = -playerDSpeed;
+                        break;
+                    case 1:
+                        playerLocChange.X = playerDSpeed;
+                        break;
+                }
+                switch (playerLocChange.Y/playerSpeed)
+                {
+                    case -1:
+                        playerLocChange.Y = -playerDSpeed;
+                        break;
+                    case 1:
+                        playerLocChange.Y = playerDSpeed;
+                        break;
+                }
+                
+            }
+            playerLocation.X += playerLocChange.X;
+            playerLocation.Y += playerLocChange.Y;
+            
+            
+            
+            if (playerLocation.X <0)
+            {
+                playerLocation.X = 0;
+            }
+            if (playerLocation.X > this.Width - playerSize.Width * 2)
+            {
+                playerLocation.X = this.Width - playerSize.Width * 2;
+            }
+            if (playerLocation.Y <0)
+            {
+                playerLocation.Y = 0;
+            }
+            if (playerLocation.Y > this.Height - playerSize.Height * 2)
+            {
+                playerLocation.Y = this.Height - playerSize.Height * 2;
+            }
+            
+            
+            if (wDown || aDown || sDown || dDown)
+            {
+                playerAnimation = 0;
+            }
+            else
+            {
+                playerAnimation++;
+                if (playerAnimation == 3)
                 {
                     playerAnimation = 0;
                 }
-                else
+            }
+            
+            int remainingBullets = 0;
+            for (int i = 0; i < allBullets.Length; i++)
+            {
+                remainingBullets++;
+                allBullets[i].Location.X += allBullets[i].Velocity.X;
+                allBullets[i].Location.Y += allBullets[i].Velocity.Y;
+                if (allBullets[i].Location.X <0)
                 {
-                    playerAnimation++;
-                    if (playerAnimation == 3)
+                    allBullets[i].destroy = true;
+                    remainingBullets--;
+                }
+                else if (allBullets[i].Location.X > this.Width - allBullets[i].bSize.Width * 2)
+                {
+                    allBullets[i].destroy = true;
+                    remainingBullets--;
+                }
+                else if (allBullets[i].Location.Y <0)
+                {
+                    allBullets[i].destroy = true;
+                    remainingBullets--;
+                }
+                else if (allBullets[i].Location.Y > this.Height - allBullets[i].bSize.Height * 2)
+                {
+                    allBullets[i].destroy = true;
+                    remainingBullets--;
+                }
+            }
+            
+            if (remainingBullets != allBullets.Length)
+            {
+                Bullet[] tempBullets = new Bullet[remainingBullets];
+                int currentTemp = 0;
+                for (int i = 0; i < allBullets.Length; i++)
+                {
+                    if (!allBullets[i].destroy)
                     {
-                        playerAnimation = 0;
+                        tempBullets[currentTemp] = allBullets[i];
+                        currentTemp++;
                     }
                 }
-                
-
+                allBullets = tempBullets;
+            }
+            
+            
+            
+            if (CurrentTick >= 4)
+            {
+                if (spaceDown)
+                {
+                    Bullet[] newPbullet = new Bullet[allBullets.Length+1];
+                    for (int i = 0; i < allBullets.Length; i++)
+                    {
+                        newPBullet[i] = allBullets[i];
+                    }
+                    newPBullet[newPBullet.Length-1] = new Bullet(new PointF(playerLocation.X+playerSize.Width/2-3/2, playerLocation.Y), new PointF(0,-4.5), new Size(3,3), false, 0);
+                    allBullets = newPBullet;
+                }
 
                 CurrentTick = 0;
             }
@@ -106,7 +230,7 @@ namespace TicTic
 
 
             //player
-            g.DrawImage(player, new Rectangle(playerLocation.X,playerLocation.Y,playerSize.Width*2,playerSize.Height*2), new Rectangle(20*playerAnimation, 0, 20, 20), GraphicsUnit.Pixel);
+            g.DrawImage(player, new Rectangle(Convert.ToInt32(Math.Floor(playerLocation.X)),Convert.ToInt32(Math.Floor(playerLocation.Y)),playerSize.Width*2,playerSize.Height*2), new Rectangle(20*playerAnimation, 0, 20, 20), GraphicsUnit.Pixel);
 
 
 
@@ -128,6 +252,9 @@ namespace TicTic
                 case Keys.D:
                     dDown = true;
                     break;
+                case Keys.Space:
+                    spaceDown = true;
+                    break;
             }
         }
 
@@ -146,6 +273,9 @@ namespace TicTic
                     break;
                 case Keys.D:
                     dDown = false;
+                    break;
+                case Keys.Space:
+                    spaceDown = false;
                     break;
             }
         }
