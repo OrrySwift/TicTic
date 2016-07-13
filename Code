@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using System.Media;
+
 namespace TicTic
 {
     public partial class Form1 : Form
@@ -28,7 +30,12 @@ namespace TicTic
             aDown = false;
             sDown = false;
             dDown = false;
+            spaceDown = false;
+            shiftDown = false;
             allBullets = new Bullet[0];
+            allEnemys = new Enemy[0];
+            playerLives = 5;
+            playerFire.Load();
         }
         
         Timer t;
@@ -37,27 +44,35 @@ namespace TicTic
         int CurrentTick;
         Random r;
         PointF playerLocation;
-        const Float playerSpeed = 4;
-        const Float playerDSpeed = 2.828;
+        const float playerSpeed = 4f;
+        const float playerDSpeed = 2.828f;
         Size playerSize = new Size(20,20);
+        int playerLives;
         int playerAnimation;
         bool wDown;
         bool aDown;
         bool sDown;
         bool dDown;
         bool spaceDown;
+        bool shiftDown;
         Bullet[] allBullets;
-        
+        Enemy[] allEnemys;
+
         Image player = Image.FromFile(@"H:\Projects\Forms\bul\Player.PNG");
+        Image bulletIMG = Image.FromFile(@"H:\Projects\Forms\bul\Bullets.PNG");
+        Image enemyIMG = Image.FromFile(@"H:\Projects\Forms\bul\Enemy.PNG");
+
+        SoundPlayer playerFire = new SoundPlayer(@"H:\Projects\Forms\bul\PlayerFire.WAV");
+
         public class Bullet
         {
             public PointF Location;
             public PointF Velocity;
-            public Size bSize
+            public Size bSize;
             public bool HurtPlayer;
             public int bImage;
             public bool destroy;
-            public Bullet(PointF XLocation = new PointF(0f,0f), PointF XVelocity = new PointF(0f,0f), Size xSize = new Size(0,0), bool XHurtPlayer = true, int xImage = 0)
+            public Bullet(PointF XLocation = new PointF(), PointF XVelocity = new PointF(), Size xSize = new Size(), bool XHurtPlayer = true, int xImage = 0)
             {
                 Location = XLocation;
                 Velocity = XVelocity;
@@ -67,9 +82,33 @@ namespace TicTic
                 destroy = false;
             }
         }
+
+        public class Enemy
+        {
+            public PointF Location;
+            public Size bSize;
+            public int MovePattern;
+            public int MovePatternPoint;
+            public int bImage;
+            public bool destroy;
+            public Enemy(PointF XLocation = new PointF(), Size xSize = new Size(), int XMovePattern = 0, int XMovePatternPoint = 0, int xImage = 0)
+            {
+                Location = XLocation;
+                bSize = xSize;
+                MovePattern = XMovePattern;
+                MovePatternPoint = XMovePatternPoint;
+                bImage = xImage;
+                destroy = false;
+            }
+        }
                 
         private void timer_tick(object sender, EventArgs e)
         {
+            if (playerLives == 0)
+            {
+                this.Close();
+            }
+
             CurrentTick++;
             PointF playerLocChange = new PointF(0f,0f);
             if (wDown)
@@ -90,7 +129,8 @@ namespace TicTic
             }
             if (playerLocChange.X != 0 && playerLocChange.Y != 0)
             {
-                switch (playerLocChange.X/playerSpeed)
+                int temp = Convert.ToInt32(playerLocChange.X / playerSpeed);
+                switch (temp)
                 {
                     case -1:
                         playerLocChange.X = -playerDSpeed;
@@ -99,7 +139,8 @@ namespace TicTic
                         playerLocChange.X = playerDSpeed;
                         break;
                 }
-                switch (playerLocChange.Y/playerSpeed)
+                temp = Convert.ToInt32(playerLocChange.Y / playerSpeed);
+                switch (temp)
                 {
                     case -1:
                         playerLocChange.Y = -playerDSpeed;
@@ -109,6 +150,11 @@ namespace TicTic
                         break;
                 }
                 
+            }
+            if (shiftDown)
+            {
+                playerLocChange.X = playerLocChange.X / 2;
+                playerLocChange.Y = playerLocChange.Y / 2;
             }
             playerLocation.X += playerLocChange.X;
             playerLocation.Y += playerLocChange.Y;
@@ -151,23 +197,23 @@ namespace TicTic
             {
                 remainingBullets++;
                 allBullets[i].Location.X += allBullets[i].Velocity.X;
-                allBullets[i].Location.Y += allBullets[i].Velocity.Y;
-                if (allBullets[i].Location.X <0)
+                allBullets[i].Location.Y += allBullets[i].Velocity.Y +0.5f;
+                if (allBullets[i].Location.X < -allBullets[i].bSize.Width * 2)
                 {
                     allBullets[i].destroy = true;
                     remainingBullets--;
                 }
-                else if (allBullets[i].Location.X > this.Width - allBullets[i].bSize.Width * 2)
+                else if (allBullets[i].Location.X > this.Width )
                 {
                     allBullets[i].destroy = true;
                     remainingBullets--;
                 }
-                else if (allBullets[i].Location.Y <0)
+                else if (allBullets[i].Location.Y < -allBullets[i].bSize.Height * 2)
                 {
                     allBullets[i].destroy = true;
                     remainingBullets--;
                 }
-                else if (allBullets[i].Location.Y > this.Height - allBullets[i].bSize.Height * 2)
+                else if (allBullets[i].Location.Y > this.Height )
                 {
                     allBullets[i].destroy = true;
                     remainingBullets--;
@@ -191,17 +237,18 @@ namespace TicTic
             
             
             
-            if (CurrentTick >= 4)
+            if (CurrentTick >= 8)
             {
                 if (spaceDown)
                 {
-                    Bullet[] newPbullet = new Bullet[allBullets.Length+1];
+                    Bullet[] newPBullet = new Bullet[allBullets.Length+1];
                     for (int i = 0; i < allBullets.Length; i++)
                     {
                         newPBullet[i] = allBullets[i];
                     }
-                    newPBullet[newPBullet.Length-1] = new Bullet(new PointF(playerLocation.X+playerSize.Width/2-3/2, playerLocation.Y), new PointF(0,-4.5), new Size(3,3), false, 0);
+                    newPBullet[newPBullet.Length-1] = new Bullet(new PointF(playerLocation.X+playerSize.Width-3, playerLocation.Y), new PointF(0f, -4.5f), new Size(3,3), false, 0);
                     allBullets = newPBullet;
+                    playerFire.Play();
                 }
 
                 CurrentTick = 0;
@@ -221,16 +268,25 @@ namespace TicTic
 
 
             //bullets
+            for (int i = 0; i < allBullets.Length; i++)
+            {
+                g.DrawImage(bulletIMG, new Rectangle(Convert.ToInt32(Math.Floor(allBullets[i].Location.X)), Convert.ToInt32(Math.Floor(allBullets[i].Location.Y)), allBullets[i].bSize.Width * 2, allBullets[i].bSize.Height * 2), new Rectangle(0, 0, 3, 3), GraphicsUnit.Pixel);
+
+            }
+
+
+                //enemies
+
+            for (int i = 0; i < allEnemys.Length; i++)
+            {
+                g.DrawImage(enemyIMG, new Rectangle(Convert.ToInt32(Math.Floor(allEnemys[i].Location.X)), Convert.ToInt32(Math.Floor(allEnemys[i].Location.Y)), allEnemys[i].bSize.Width * 2, allEnemys[i].bSize.Height * 2), new Rectangle(0, 0, 3, 3), GraphicsUnit.Pixel);
+
+            }
 
 
 
-            //enemies
-
-
-
-
-            //player
-            g.DrawImage(player, new Rectangle(Convert.ToInt32(Math.Floor(playerLocation.X)),Convert.ToInt32(Math.Floor(playerLocation.Y)),playerSize.Width*2,playerSize.Height*2), new Rectangle(20*playerAnimation, 0, 20, 20), GraphicsUnit.Pixel);
+                //player
+                g.DrawImage(player, new Rectangle(Convert.ToInt32(Math.Floor(playerLocation.X)), Convert.ToInt32(Math.Floor(playerLocation.Y)), playerSize.Width * 2, playerSize.Height * 2), new Rectangle(20 * playerAnimation, 0, 20, 20), GraphicsUnit.Pixel);
 
 
 
@@ -255,6 +311,9 @@ namespace TicTic
                 case Keys.Space:
                     spaceDown = true;
                     break;
+                case Keys.Shift:
+                    shiftDown = true;
+                    break;
             }
         }
 
@@ -276,6 +335,9 @@ namespace TicTic
                     break;
                 case Keys.Space:
                     spaceDown = false;
+                    break;
+                case Keys.Shift:
+                    shiftDown = false;
                     break;
             }
         }
