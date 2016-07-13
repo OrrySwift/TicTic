@@ -35,9 +35,50 @@ namespace TicTic
             allBullets = new Bullet[0];
             allEnemys = new Enemy[0];
             playerLives = 5;
+            distance = 0;
             playerFire.Load();
+            WorldSection = 0;
+            for (int i = 0; i < WorldString.Length)
+            {
+                if (WorldString[i] == ';')
+                {
+                    WorldSection++;
+                }
+            }
+            World = new int[WorldSection, 3];
+            int start = 0;
+            int end = 0;
+            WorldSection = 0;
+            SectionSection = 0;
+            for (int i = 0; i < WorldString.Length)
+            {
+                if (WorldString[i] == ';' || WorldString[i] == ',')
+                {
+                    end = i-1;
+                    if (SectionSection == 2 && WorldSection != 0)
+                    {
+                        World[WorldSection, 2] = Convert.ToInt32(WorldString.Substring(start, end-start));
+                        World[WorldSection, 2] += World[WorldSection-1,2];
+                    }
+                    else
+                    {
+                        World[WorldSection, SectionSection] = Convert.ToInt32(WorldString.Substring(start, end-start));
+                    }
+                    SectionSection++;
+                    if (SectionSection == 3)
+                    {
+                        SectionSection = 0;
+                        WorldSection++;
+                    }
+                    start = i+1;
+                }
+            }
+            WorldSection = 0;
         }
         
+        const string WorldString = @"0,0,10;1,0,5;";
+        int[,] World; //X,Y   Y=0, enemy type  Y=1, enemy AI   Y=2, Distance to go the next worldsection
+        int WorldSection;
         Timer t;
         Graphics g;
         Pen p = new Pen(Color.White, 1f);
@@ -57,6 +98,7 @@ namespace TicTic
         bool shiftDown;
         Bullet[] allBullets;
         Enemy[] allEnemys;
+        int distance;
 
         Image player = Image.FromFile(@"H:\Projects\Forms\bul\Player.PNG");
         Image bulletIMG = Image.FromFile(@"H:\Projects\Forms\bul\Bullets.PNG");
@@ -237,7 +279,7 @@ namespace TicTic
             
             
             
-            if (CurrentTick >= 8)
+            if (CurrentTick%8 == 0)
             {
                 if (spaceDown)
                 {
@@ -251,8 +293,28 @@ namespace TicTic
                     playerFire.Play();
                 }
 
+            }
+            if (CurrentTick%30 == 0)
+            {
+                distance++;
+                if (World[WorldSection, 0] != 0)
+                {
+                    
+                }
+                
+                
+                
+                if (World[WorldSection, 2] == distance)
+                {
+                    WorldSection++;
+                }
+            }
+            
+            if (CurrentTick%(30*8) == 0)
+            {
                 CurrentTick = 0;
             }
+            
 
             Refresh();
         }
