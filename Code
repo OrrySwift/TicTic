@@ -1,0 +1,158 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace TicTic
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+            g = CreateGraphics();
+            t = new Timer();
+            t.Interval = 16;
+            t.Tick += new EventHandler(timer_tick);
+            t.Start();
+            CurrentTick = 0;
+            r = new Random();
+            playerLocation = new Point(300, 500);
+            playerAnimation = 0;
+            wDown = false;
+            aDown = false;
+            sDown = false;
+            dDown = false;
+        }
+        
+        Timer t;
+        Graphics g;
+        Pen p = new Pen(Color.White, 1f);
+        int CurrentTick;
+        Random r;
+        Point playerLocation;
+        Size playerSize = new Size(20,20);
+        int playerAnimation;
+        bool wDown;
+        bool aDown;
+        bool sDown;
+        bool dDown;
+        Image player = Image.FromFile(@"H:\Projects\Forms\bul\Player.PNG");
+                
+        private void timer_tick(object sender, EventArgs e)
+        {
+            CurrentTick++;
+            if (wDown && playerLocation.Y > 0)
+            {
+                playerLocation.Y -= 3;
+            }
+            if (aDown && playerLocation.X > 0)
+            {
+                playerLocation.X -= 3;
+            }
+            if (sDown && playerLocation.Y < Height - playerSize.Height)
+            {
+                playerLocation.Y += 3;
+            }
+            if (dDown && playerLocation.X < Width - playerSize.Width)
+            {
+                playerLocation.X += 3;
+            }
+            if (CurrentTick >= 4)
+            {
+                if (wDown || aDown || sDown || dDown)
+                {
+                    playerAnimation = 0;
+                }
+                else
+                {
+                    playerAnimation++;
+                    if (playerAnimation == 3)
+                    {
+                        playerAnimation = 0;
+                    }
+                }
+                
+
+
+                CurrentTick = 0;
+            }
+
+            Refresh();
+        }
+
+        private void Form1_Paint(object sender, PaintEventArgs e)
+        {
+            e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+            g = e.Graphics;
+
+            g.Clear(Color.Black);
+            //background
+
+
+
+            //bullets
+
+
+
+            //enemies
+
+
+
+
+            //player
+            g.DrawImage(player, new Rectangle(playerLocation.X,playerLocation.Y,playerSize.Width*2,playerSize.Height*2), new Rectangle(20*playerAnimation, 0, 20, 20), GraphicsUnit.Pixel);
+
+
+
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.W:
+                    wDown = true;
+                    break;
+                case Keys.A:
+                    aDown = true;
+                    break;
+                case Keys.S:
+                    sDown = true;
+                    break;
+                case Keys.D:
+                    dDown = true;
+                    break;
+            }
+        }
+
+        private void Form1_KeyUp(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.W:
+                    wDown = false;
+                    break;
+                case Keys.A:
+                    aDown = false;
+                    break;
+                case Keys.S:
+                    sDown = false;
+                    break;
+                case Keys.D:
+                    dDown = false;
+                    break;
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+    }
+}
