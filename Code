@@ -137,17 +137,79 @@ namespace TicTic
             public int MovePatternPoint;
             public int bImage;
             public bool destroy;
-            public Enemy(PointF XLocation = new PointF(), Size xSize = new Size(), int XMovePattern = 0, int XMovePatternPoint = 0, int xImage = 0)
+            public int HP;
+            public int maxHP;
+            
+            public Enemy(PointF XLocation = new PointF(), Size xSize = new Size(), int XMovePattern = 0, int xImage = 0, int xmaxHP = 1)
             {
                 Location = XLocation;
                 bSize = xSize;
                 MovePattern = XMovePattern;
-                MovePatternPoint = XMovePatternPoint;
+                MovePatternPoint = 0;
                 bImage = xImage;
                 destroy = false;
+                maxHP = xmaxHP;
+                HP = maxHP;
             }
         }
+        
+        private Size EnemyTypeSize(int EnemyImage)
+        {
+            Size output = new Size(0,0);
+            switch (EnemyImage)
+            {
+                case 0:
+                    output.Width = 25;
+                    output.Height = 25;
+                    break;
+                case 1:
+                    output.Width = 13;
+                    output.Height = 19;
+                    break;
+            }
+            return output;
+        }
+        
+        private string MovePatternInfo(string ReturnType, int MovePattern)
+        {
+            //start location
+            //maxHP
+            //isBoss
+            //
+        }
+        
+        private PointF MovePatternNext(int MovePattern, ref int MovePatternPoint, ref bool destroy)
+        {
+            output PointF = new PointF(0f,0f);
+            
+            switch (MovePattern)
+            {
+                case 0:
+                    switch (MovePatternPoint)
+                    {
+                        case 0: PointF.X = 0f; PointF.Y = 0f; break;
+                        case 1: MovePatternPoint = 0; PointF.X = 0f; PointF.Y = 0f; break;
+                    }
+                    break;
+                case 1:
+                    switch (MovePatternPoint)
+                    {
+                        case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: PointF.X = 0f; PointF.Y = 0.5f; break;
+                        case 1: PointF.X = 0f; PointF.Y = 0f; break;
+                        case 2: PointF.X = 0f; PointF.Y = 0f; break;
+                        case 3: PointF.X = 0f; PointF.Y = 0f; break;
+                        case 4: PointF.X = 0f; PointF.Y = 0f; break;
+                        case 5: destroy = true; break;
+                    }
+                    break;
+                    break;
+                case 2:
+                    
+                    break;
                 
+            }
+        }
+        
         private void timer_tick(object sender, EventArgs e)
         {
             if (playerLives == 0)
@@ -243,7 +305,7 @@ namespace TicTic
             {
                 remainingBullets++;
                 allBullets[i].Location.X += allBullets[i].Velocity.X;
-                allBullets[i].Location.Y += allBullets[i].Velocity.Y +0.5f;
+                allBullets[i].Location.Y += allBullets[i].Velocity.Y;
                 if (allBullets[i].Location.X < -allBullets[i].bSize.Width * 2)
                 {
                     allBullets[i].destroy = true;
@@ -300,12 +362,11 @@ namespace TicTic
             }
             if (CurrentTick%30 == 0)
             {
-                if (BossAlive)
+                if (!BossAlive)
                 {
                     distance++;
                     if (World[WorldSection, 0] != 0)
                     {
-                    weiondrgino
                         Enemy[] newEnemy = new Enemy[allEnemys.Length+1];
                         for (int i = 0; i < allEnemys.Length; i++)
                         {
