@@ -74,6 +74,8 @@ namespace TicTic
                 }
             }
             WorldSection = 0;
+            PlayWindow = new Rectangle(this.Width/2-300, this.Height/2-300, 600,600);
+            BossAlive = false;
         }
         
         const string WorldString = @"0,0,10;1,0,5;";
@@ -99,6 +101,8 @@ namespace TicTic
         Bullet[] allBullets;
         Enemy[] allEnemys;
         int distance;
+        Rectangle PlayWindow;
+        bool BossAlive;
 
         Image player = Image.FromFile(@"H:\Projects\Forms\bul\Player.PNG");
         Image bulletIMG = Image.FromFile(@"H:\Projects\Forms\bul\Bullets.PNG");
@@ -296,17 +300,27 @@ namespace TicTic
             }
             if (CurrentTick%30 == 0)
             {
-                distance++;
-                if (World[WorldSection, 0] != 0)
+                if (BossAlive)
                 {
+                    distance++;
+                    if (World[WorldSection, 0] != 0)
+                    {
+                    weiondrgino
+                        Enemy[] newEnemy = new Enemy[allEnemys.Length+1];
+                        for (int i = 0; i < allEnemys.Length; i++)
+                        {
+                            newEnemy[i] = allEnemys[i];
+                        }
+                        newEnemy[newEnemy.Length-1] = new Enemy(new PointF(playerLocation.X+playerSize.Width-3, playerLocation.Y), new PointF(0f, -4.5f), new Size(3,3), false, 0);
+                        allEnemys = newEnemy;
+                    }
                     
-                }
-                
-                
-                
-                if (World[WorldSection, 2] == distance)
-                {
-                    WorldSection++;
+                    
+                    
+                    if (World[WorldSection, 2] == distance)
+                    {
+                        WorldSection++;
+                    }
                 }
             }
             
@@ -321,6 +335,7 @@ namespace TicTic
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
+            PlayWindow = new Rectangle(this.Width/2-300, this.Height/2-300, 600,600);
             e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
             g = e.Graphics;
 
@@ -332,7 +347,7 @@ namespace TicTic
             //bullets
             for (int i = 0; i < allBullets.Length; i++)
             {
-                g.DrawImage(bulletIMG, new Rectangle(Convert.ToInt32(Math.Floor(allBullets[i].Location.X)), Convert.ToInt32(Math.Floor(allBullets[i].Location.Y)), allBullets[i].bSize.Width * 2, allBullets[i].bSize.Height * 2), new Rectangle(0, 0, 3, 3), GraphicsUnit.Pixel);
+                g.DrawImage(bulletIMG, new Rectangle(PlayWindow.X+Convert.ToInt32(Math.Floor(allBullets[i].Location.X)), PlayWindow.Y+Convert.ToInt32(Math.Floor(allBullets[i].Location.Y)), allBullets[i].bSize.Width * 2, allBullets[i].bSize.Height * 2), new Rectangle(allBullets[i].bImage*15, 0, allBullets[i].bSize.Width, allBullets[i].bSize.Height), GraphicsUnit.Pixel);
 
             }
 
@@ -341,14 +356,14 @@ namespace TicTic
 
             for (int i = 0; i < allEnemys.Length; i++)
             {
-                g.DrawImage(enemyIMG, new Rectangle(Convert.ToInt32(Math.Floor(allEnemys[i].Location.X)), Convert.ToInt32(Math.Floor(allEnemys[i].Location.Y)), allEnemys[i].bSize.Width * 2, allEnemys[i].bSize.Height * 2), new Rectangle(0, 0, 3, 3), GraphicsUnit.Pixel);
+                g.DrawImage(enemyIMG, new Rectangle(PlayWindow.X+Convert.ToInt32(Math.Floor(allEnemys[i].Location.X)), PlayWindow.Y+Convert.ToInt32(Math.Floor(allEnemys[i].Location.Y)), allEnemys[i].bSize.Width * 2, allEnemys[i].bSize.Height * 2), new Rectangle(0, 0, 3, 3), GraphicsUnit.Pixel);
 
             }
 
 
 
                 //player
-                g.DrawImage(player, new Rectangle(Convert.ToInt32(Math.Floor(playerLocation.X)), Convert.ToInt32(Math.Floor(playerLocation.Y)), playerSize.Width * 2, playerSize.Height * 2), new Rectangle(20 * playerAnimation, 0, 20, 20), GraphicsUnit.Pixel);
+                g.DrawImage(player, new Rectangle(PlayWindow.X+Convert.ToInt32(Math.Floor(playerLocation.X)), PlayWindow.Y+Convert.ToInt32(Math.Floor(playerLocation.Y)), playerSize.Width * 2, playerSize.Height * 2), new Rectangle(20 * playerAnimation, 0, 20, 20), GraphicsUnit.Pixel);
 
 
 
